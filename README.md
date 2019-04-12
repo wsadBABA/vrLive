@@ -5,4 +5,4 @@ maven springboot
 
 HLS + three + nginx + install360 pro
 
-思路：
+install360 pro相机自定义rtmp服务器，推理至nginx，hls拉流播放，threejs解析，实现全景
