@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>实时直播</title>
+    <link th:href="@{/static/style/Global_gray.css}" rel="stylesheet" type="text/css">
+    <link th:href="@{/static/style/plat_gray.css}" rel="stylesheet" type="text/css">
+    <script src="/live/static/js/jquery-1.8.3.js" type="text/javascript"></script>
+    <script src="/live/static/js/three.js" type="text/javascript"></script>
+    <script src="/live/static/js/hls.min.js" type="text/javascript"></script>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .form_box {
+            background: transparent;
+            padding-top: 0;
+            box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
+            height: 100% !important;
+            margin: 10px 1px;
+        }
+
+        .w_button_box input.n_button {
+            margin: 10px 4px;
+        }
+
+        .list tr th b {
+            color: #f8ac59;
+            margin-right: 5px;
+            font-size: 18px;
+        }
+
+        input.c_button {
+            border: 1px solid #0079c3;
+            width: auto;
+            height: 30px;
+            line-height: 30px;
+            color: #fff;
+            background: #0079c3;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: normal;
+            margin: 10px 10px;
+            padding: 0 15px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="top">
+    <div class="logo" >
+    </div>
+</div>
+<!--基础布局-->
+<div class="form_box" style="margin: 5px 5px;padding: 10px 10px;">
+    <div class="page_title"
+         style="background: #363E47;padding-bottom:10px;margin-bottom: 10px;border-radius: 6px;">
+        <!--<h1>请录入直播相机IP</h1>-->
+        <table class="form" border="0" cellspacing="0" cellpadding="0">
+            <colgroup>
+                <col width="120px">
+                <col width="200px">
+                <col width="400px">
+                <col width="">
+            </colgroup>
+            <tbody>
+            <tr>
+                <th><b>*</b>相机直播地址</th>
+                <td>
+                    <div class="element_box">
+                        <input type="text" value="" id="xjIp" class="i_text"/>
+                    </div>
+                </td>
+                <th>
+                    <input type="button" id="start" value="开始观看" style="margin: 10px 4px; float: left;"
+                           class="c_button" onclick="initLive();"/>
+                    <input type="button" id="stop" value="停止观看" style="margin: 10px 4px;float: left;display: none;"
+                           class="c_button" onclick="clearLive();"/>
+                </th>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="height: 82%;">
+        <div class="p_box" id="container" style="display: none;height: 95%;padding: 5px;">
+
+        </div>
+        <div class="n_box" id="containerImg" style="height: 95%;padding: 5px;">
+            <div>
+                <img src="/live/static/image/logo2.png">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--文件加载-->
+<script type="text/javascript">
+    var camera, scene, renderer;
+    var serverIp;
+    var hls, requestId, video;
+    var texture_placeholder,
+        isUserInteracting = false,
+        onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+        lon = 0, onMouseDownLon = 0,
+        lat = 0, onMouseDownLat = 0,
+        phi = 0, theta = 0,
+        distance = 50,
+        onPointerDownPointerX = 0,
+        onPointerDownPointerY = 0,
+        onPointerDownLon = 0,
+        onPointerDownLat = 0;
+
+    function init() {
+        var container, mesh;
+        container = document.getElementById('container');
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
+        camera.target = new THREE.Vector3(0, 0, 0);
+        scene = new THREE.Scene();
+        var geometry = new THREE.SphereBufferGeometry(500, 60, 40);
+        // invert the geometry on the x-axis so that all of the faces point inward
+        geometry.scale(-1, 1, 1);
+
+        video = document.createElement('video');
+        video.crossOrigin = 'anonymous';
+        video.width = 640;
+        video.height = 360;
+        video.loop = true;
+        video.muted = true;
+
+        hls = new Hls();
+        var address=$.trim($("#xjIp").val());
+        hls.loadSource(window.location.origin + '/live/sdcard/' + address.split("/")[0] + '/liveStream/'+  address.split("/")[1] +'.m3u8');
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            video.play();
+        });
+        hls.on(Hls.Events.ERROR, function (event, data) {
+            if (data.fatal) {
+                switch (data.type) {
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        alert("请确认\n该相机已设置为直播模式\n网络链接正常\n相机直播地址正确");
+                        clearLive();
+                        break;
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        console.log("fatal media error encountered, try to recover");
+                        hls.recoverMediaError();
+                        break;
+                    default:
+                        hls.destroy();
+                        break;
+                }
+            }
+        });
+
+        var texture = new THREE.VideoTexture(video);
+        texture.minFilter = THREE.LinearFilter;
+        texture.format = THREE.RGBFormat;
+        var material = new THREE.MeshBasicMaterial({map: texture});
+        mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize($("#container").width(), $("#container").height());
+        container.appendChild(renderer.domElement);
+        document.addEventListener('mousedown', onDocumentMouseDown, false);
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        document.addEventListener('mouseup', onDocumentMouseUp, false);
+        document.addEventListener('wheel', onDocumentMouseWheel, false);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize($("#container").width(), $("#container").height());
+    }
+
+    function onDocumentMouseDown(event) {
+        event.preventDefault();
+        isUserInteracting = true;
+        onPointerDownPointerX = event.clientX;
+        onPointerDownPointerY = event.clientY;
+        onPointerDownLon = lon;
+        onPointerDownLat = lat;
+    }
+
+    function onDocumentMouseMove(event) {
+        if (isUserInteracting === true) {
+            lon = ( onPointerDownPointerX - event.clientX ) * 0.1 + onPointerDownLon;
+            lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+        }
+    }
+
+    function onDocumentMouseUp(event) {
+        isUserInteracting = false;
+    }
+
+    function onDocumentMouseWheel(event) {
+        distance += event.deltaY * 0.05;
+        distance = THREE.Math.clamp(distance, 1, 50);
+    }
+
+    function animate() {
+        requestId = requestAnimationFrame(animate);
+        update();
+    }
+
+    function update() {
+        lat = Math.max(-85, Math.min(85, lat));
+        phi = THREE.Math.degToRad(90 - lat);
+        theta = THREE.Math.degToRad(lon);
+        camera.position.x = distance * Math.sin(phi) * Math.cos(theta);
+        camera.position.y = distance * Math.cos(phi);
+        camera.position.z = distance * Math.sin(phi) * Math.sin(theta);
+        camera.lookAt(camera.target);
+        renderer.render(scene, camera);
+    }
+
+    function initLive() {
+        if (hls) {
+            return;
+        }
+        var ip = $.trim($("#xjIp").val());
+        if (ip) {
+//            if (!isValidIP(ip)) {
+//                alert("请确认录入的IP合法");
+//                return;
+//            }
+        } else {
+            alert("相机直播地址");
+            return;
+        }
+        $("#container").show();
+        $("#container").css("height", "95%");
+        $("#containerImg").hide();
+        init();
+        animate();
+        $("#start").hide();
+        $("#stop").show();
+    }
+
+    function clearLive() {
+        if (hls) {
+            hls.destroy();
+            hls = null;
+        }
+        if (requestId) {
+            window.cancelAnimationFrame(requestId);
+        }
+        $("#container")[0].innerHTML = "";
+        document.removeEventListener('mousedown', onDocumentMouseDown);
+        document.removeEventListener('mousemove', onDocumentMouseMove);
+        document.removeEventListener('mouseup', onDocumentMouseUp);
+        document.removeEventListener('wheel', onDocumentMouseWheel);
+        $("#start").show();
+        $("#stop").hide();
+
+        $("#container").hide();
+        $("#containerImg").show();
+
+    }
+
+    function isValidIP(ip) {
+        var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+        return reg.test(ip);
+    }
+
+
+</script>
+
+</body>
+</html>

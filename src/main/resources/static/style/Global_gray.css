@@ -1,0 +1,42 @@
+﻿body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td{margin:0;padding:0}
+body,button,select,textarea{font:normal 12px/150% Tahoma, "microsoft yahei", Helvetica, Arial, "宋体", sans-serif;color:#000;background:#fff;outline:none;}
+html,body{height:100%;
+		scrollbar-face-color: #3f546e;
+        scrollbar-shadow-color: #3f546e;
+        scrollbar-highlight-color: #3f546e;
+        scrollbar-3dlight-color: #3f546e;
+        scrollbar-darkshadow-color: #3f546e;
+        scrollbar-track-color: #2f4056;
+        scrollbar-arrow-color: #777;
+        font-family: "microsoft yahei";
+        background: #1F2228;}
+img {border:0 none}
+h1{font-size:18px;}
+h2{font-size:16px;}
+h3{font-size:14px;}
+h4{font-size:12px;}
+address,cite,dfn,em,var{font-style:normal}
+code,kbd,pre,samp,tt{font-family:"Courier New", Courier, monospace;}
+small{font-size:12px;}
+ul,ol,li{list-style:none}
+a{text-decoration:none;color:red;outline:none;blr:expression(this.onFocus=this.blur());position:relative;cursor: pointer}
+a:hover{text-decoration:none}
+abbr[title],acronym[title]{border-bottom:1px dotted;cursor:help;}
+q:before,q:after{content:'';}
+legend{color:#000;}
+fieldset,img{border:none;}
+table{border-collapse:collapse;table-layout:fixed}
+hr{border:none;height:1px;color:#fff;}
+h5,h6,button,input,select,textarea{color:#333;font-family: "microsoft yahei";}
+input[type="checkbox"]{vertical-align:middle;}
+input[type="radio"]{vertical-align:middle;}
+input,textarea,select,button{outline: none;}
+::-webkit-scrollbar {width: 8px;height: 8px;}			
+::-webkit-scrollbar-track {background-color: #0f1d2c;}/*滚动条背景色*/
+::-webkit-scrollbar-thumb {background-color: #2c404d;}/*滚动条颜色*/
+::-webkit-scrollbar-thumb:hover {background-color:#005e80}
+::-webkit-scrollbar-thumb:active {background-color: #005e80}
+
+
+			
+			
