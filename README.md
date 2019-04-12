@@ -7,7 +7,7 @@ HLS + three + nginx + install360 pro
 
 思路：
 
-install360 pro相机自定义rtmp服务器，推理至nginx，hls拉流播放，threejs解析，实现全景
+install360 pro相机自定义rtmp服务器，推理至nginx，hls拉流播放，threejs解析，实现全景。在播放过程中发现无音频播放问题，待解决。
 
 优化一：
 
